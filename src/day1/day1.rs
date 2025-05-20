@@ -2,35 +2,40 @@ use std::fs;
 
 pub fn run_day1(input_file: &str) {
     let input = load_input(input_file);
-    println!("{}", day1(input.as_str()));
-    println!("{}", day2(input.as_str()));
+    if let Ok(ins) = input {
+        println!("{}", part1(&ins));
+        println!("{}", part2(&ins));    
+    }
+    
 }
 
-fn day1(input: &str) -> u32 {
+fn part1(input: &[u32]) -> u32 {
     let mut run_sum = 0;
-    for (i, c) in input.char_indices() {
+    for (i, c) in input.iter().enumerate() {
         let next_ix = (i + 1) % input.len();
-        if c == input.chars().nth(next_ix).unwrap() {
-            run_sum += c.to_digit(10).unwrap();
+        if *c == input[next_ix] {
+            run_sum += c;
         }
     }
     run_sum
 }
 
-fn day2(input: &str) -> u32 {
+fn part2(input: &[u32]) -> u32 {
     let mut run_sum = 0;
     let hop = input.len() / 2;
-    for (i, c) in input.char_indices() {
+    for (i, c) in input.iter().enumerate() {
         let cmp_ix = (i + hop) % input.len();
-        if c == input.chars().nth(cmp_ix).unwrap() {
-            run_sum += c.to_digit(10).unwrap();
+        if *c == input[cmp_ix] {
+            run_sum += c
         }
     }
     run_sum
 }
 
-fn load_input(file_name: &str) -> String {
-    fs::read_to_string(file_name).unwrap().to_string()
+fn load_input(file_name: &str) -> Result<Vec<u32>, std::io::Error> {
+    let content = fs::read_to_string(file_name)?;
+    let digits: Vec<u32> = content.chars().flat_map(|c| c.to_digit(10)).collect();
+    Ok(digits)
 }
 
 #[cfg(test)]
@@ -38,21 +43,41 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_day1_basic() {
-        assert_eq!(day1("1122"), 3);
-        assert_eq!(day1("1234"), 0);
-        assert_eq!(day1("1111"), 4);
-        assert_eq!(day1("91212129"), 9);
+    fn test_part1() {
+        let tests: Vec<(&str, u32)> = vec![
+            ("1122", 3),
+            ("1234", 0),
+            ("1111", 4),
+            ("91212129", 9)
+        ];
+        for (input, expected) in tests {
+            assert_eq!(part1(&input.to_digits()), expected)    
+        }
     }
 
     #[test]
-    fn test_day2() {
-        assert_eq!(day2("1212"), 6);
-        assert_eq!(day2("1221"), 0);
-        assert_eq!(day2("123425"), 4);
-        assert_eq!(day2("123123"), 12);
-        assert_eq!(day2("12131415"), 4);
+    fn test_part2() {
+        let tests: Vec<(&str, u32)> = vec![
+            ("1212", 6),
+            ("1221", 0),
+            ("123425", 4),
+            ("123123", 12),
+            ("12131415", 4),
+        ];
+        for (input, expected) in tests {
+            assert_eq!(part2(&input.to_digits()), expected);
+        }
     }
 
 
+}
+
+trait ToDigits {
+    fn to_digits(&self) -> Vec<u32>;
+}
+
+impl ToDigits for &str {
+    fn to_digits(&self) -> Vec<u32> {
+        self.chars().filter_map(|c| c.to_digit(10)).collect()
+    }
 }
